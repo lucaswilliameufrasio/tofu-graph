@@ -3,6 +3,9 @@ name = "tfgraph"
 version = "0.1.0"
 edition = "2021"
 description = "Lê um plan do Terraform e abre no navegador um diagrama da infra provisionada (recursos, nomes, relações e dependências)."
+license = "MIT"
+repository = "https://github.com/lucaswilliameufrasio/tofu-graph"
+readme = "README.md"
 
 [[bin]]
 name = "tfgraph"
@@ -13,7 +16,7 @@ clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 anyhow = "1"
-webbrowser = "0.8"
+webbrowser = "1.2"
 
 [profile.release]
 opt-level = 3

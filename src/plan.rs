@@ -42,7 +42,11 @@ pub fn generate(dir: &Path, forced_bin: Option<&str>, extra_plan_args: &[String]
 
     let tmp_plan = std::env::temp_dir().join(format!("tfgraph-plan-{}.bin", std::process::id()));
 
-    eprintln!("$ {bin} plan -out={} (em {})", tmp_plan.display(), dir.display());
+    eprintln!(
+        "$ {bin} plan -out={} (em {})",
+        tmp_plan.display(),
+        dir.display()
+    );
     let plan_status = Command::new(&bin)
         .arg("plan")
         .arg(format!("-out={}", tmp_plan.display()))
@@ -70,9 +74,12 @@ fn show_json(bin: &str, plan_file: &Path, cwd: Option<&Path>) -> Result<Value> {
     if let Some(dir) = cwd {
         cmd.current_dir(dir);
     }
-    let output = cmd
-        .output()
-        .with_context(|| format!("falha ao executar `{bin} show -json {}`", plan_file.display()))?;
+    let output = cmd.output().with_context(|| {
+        format!(
+            "falha ao executar `{bin} show -json {}`",
+            plan_file.display()
+        )
+    })?;
 
     if !output.status.success() {
         bail!(
@@ -109,4 +116,3 @@ pub fn load(path: &Path, forced_bin: Option<&str>) -> Result<Value> {
     let cwd = path.parent().filter(|p| !p.as_os_str().is_empty());
     show_json(&bin, path, cwd)
 }
-

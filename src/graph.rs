@@ -3,12 +3,12 @@ use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct Node {
-    pub id: String,        // endereço completo (com índice), ex: aws_instance.web[0]
+    pub id: String,         // endereço completo (com índice), ex: aws_instance.web[0]
     pub config_key: String, // endereço sem índice, usado para casar dependências
-    pub kind: String,      // ex: aws_instance
-    pub name: String,      // ex: web
-    pub module: String,    // ex: "" (root) ou "module.rede.module.subrede"
-    pub action: String,    // create | update | delete | replace | no-op | read
+    pub kind: String,       // ex: aws_instance
+    pub name: String,       // ex: web
+    pub module: String,     // ex: "" (root) ou "module.rede.module.subrede"
+    pub action: String,     // create | update | delete | replace | no-op | read
     pub is_data: bool,
 }
 
@@ -32,11 +32,7 @@ fn strip_indexes(addr: &str) -> String {
     for c in addr.chars() {
         match c {
             '[' => depth += 1,
-            ']' => {
-                if depth > 0 {
-                    depth -= 1
-                }
-            }
+            ']' => depth = depth.saturating_sub(1),
             _ if depth == 0 => out.push(c),
             _ => {}
         }
@@ -72,8 +68,16 @@ fn collect_nodes(root: &Value) -> Vec<Node> {
             if addr.is_empty() {
                 continue;
             }
-            let kind = rc.get("type").and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let name = rc.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let kind = rc
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let name = rc
+                .get("name")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
             let module = rc
                 .get("module_address")
                 .and_then(|v| v.as_str())
@@ -106,7 +110,10 @@ fn collect_nodes(root: &Value) -> Vec<Node> {
     } else if let Some(root_module) = root
         .get("values")
         .and_then(|v| v.get("root_module"))
-        .or_else(|| root.get("planned_values").and_then(|v| v.get("root_module")))
+        .or_else(|| {
+            root.get("planned_values")
+                .and_then(|v| v.get("root_module"))
+        })
     {
         collect_nodes_from_module(root_module, &mut nodes);
     }
@@ -121,8 +128,16 @@ fn collect_nodes_from_module(module: &Value, out: &mut Vec<Node>) {
             if addr.is_empty() {
                 continue;
             }
-            let kind = r.get("type").and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let name = r.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let kind = r
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let name = r
+                .get("name")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
             let is_data = r.get("mode").and_then(|v| v.as_str()) == Some("data");
             out.push(Node {
                 id: addr.to_string(),
@@ -262,10 +277,7 @@ fn walk_config_module(module: &Value, prefix: &str, out: &mut HashMap<String, Ve
 
 fn collect_dependencies(root: &Value) -> HashMap<String, Vec<String>> {
     let mut out = HashMap::new();
-    if let Some(root_module) = root
-        .get("configuration")
-        .and_then(|c| c.get("root_module"))
-    {
+    if let Some(root_module) = root.get("configuration").and_then(|c| c.get("root_module")) {
         walk_config_module(root_module, "", &mut out);
     }
     out
@@ -279,7 +291,10 @@ pub fn build(root: &Value) -> Graph {
     // por causa de count/for_each)
     let mut by_config: HashMap<String, Vec<String>> = HashMap::new();
     for n in &nodes {
-        by_config.entry(n.config_key.clone()).or_default().push(n.id.clone());
+        by_config
+            .entry(n.config_key.clone())
+            .or_default()
+            .push(n.id.clone());
     }
 
     let mut seen_edges: HashSet<(String, String)> = HashSet::new();

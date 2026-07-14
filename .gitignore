@@ -1,0 +1,8 @@
+/target/
+*.tfplan
+*.tfstate
+*.tfstate.*
+.terraform/
+.env
+.env.*
+!.env.example

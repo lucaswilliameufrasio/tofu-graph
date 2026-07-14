@@ -5,12 +5,28 @@ abre no navegador um diagrama interativo de toda a infraestrutura
 provisionada: cada recurso com seu nome, e as setas mostrando quem depende
 de quem.
 
+![Exemplo do tfgraph](assets/tfgraph.webp)
+
+> A imagem mostra um exemplo de infraestrutura AWS. Os nomes exibidos são
+> apenas ilustrativos e não fazem parte do projeto.
+
 ## Build
 
 ```bash
 cargo build --release
 # binário em target/release/tfgraph
 ```
+
+## Instalação
+
+Com Rust instalado, compile e instale o binário localmente:
+
+```bash
+cargo install --path .
+```
+
+O `tfgraph` precisa de `tofu` ou `terraform` disponível no `PATH` para o modo
+automático. Também pode ler um JSON exportado ou um plan binário já existente.
 
 ## Uso — modo automático (o mais comum)
 
@@ -68,6 +84,12 @@ tfgraph --plan plan.tfplan
 | `--title <texto>` | título mostrado no topo da página |
 | `-- <args...>` | argumentos extras repassados pro `<cli> plan` (ex: `-var-file=`) |
 
+### Privacidade
+
+Plans de Terraform/OpenTofu podem conter valores sensíveis. O tfgraph exibe
+nomes de recursos e dependências, mas trate os arquivos de plan e o HTML
+gerado como dados privados e não os publique sem revisar o conteúdo.
+
 ## O que o diagrama mostra
 
 - **Nós** = recursos (`aws_instance.web`, `aws_vpc.main`, data sources, etc.),
@@ -94,3 +116,15 @@ muda (`tofu` vs `terraform`), e isso é resolvido em `plan.rs`.
   dependências.
 - O modo automático (`--dir`) roda um `plan` de verdade, que precisa de
   credenciais/backend configurados como qualquer `tofu plan` normal.
+
+## Desenvolvimento
+
+```bash
+cargo fmt --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --all-targets --all-features
+```
+
+## Licença
+
+Distribuído sob a licença [MIT](LICENSE).

@@ -15,7 +15,18 @@ fn action_meta(action: &str) -> (&'static str, &'static str, &'static str) {
     }
 }
 
+fn escape_html(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
+}
+
 pub fn render(graph: &Graph, title: &str, plan_path: &str) -> String {
+    let title = escape_html(title);
+    let plan_path = escape_html(plan_path);
     let nodes_json: Vec<serde_json::Value> = graph
         .nodes
         .iter()
@@ -206,4 +217,17 @@ pub fn render(graph: &Graph, title: &str, plan_path: &str) -> String {
         nodes_str = nodes_str,
         edges_str = edges_str,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::escape_html;
+
+    #[test]
+    fn escapes_html_special_characters() {
+        assert_eq!(
+            escape_html("<title> & \"quoted\" 'value'"),
+            "&lt;title&gt; &amp; &quot;quoted&quot; &#39;value&#39;"
+        );
+    }
 }
